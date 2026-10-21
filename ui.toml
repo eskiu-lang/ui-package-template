@@ -1,0 +1,14 @@
+# What an app that depends on this package gets: the frameworks, plist entries, permissions,
+# Maven libraries, Swift packages and receivers its native code needs. An app's own ui.toml
+# wins for the same key. See https://github.com/eskiu-lang/ui/blob/main/docs/native.md
+#
+# [ios]
+# frameworks = ["CoreLocation"]
+#
+# [ios.plist]
+# NSLocationWhenInUseUsageDescription = "Why the app asks"
+#
+# [android]
+# permissions = ["android.permission.ACCESS_FINE_LOCATION"]
+# dependencies = ["com.example:library:1.0.0"]
+# receivers = ["org.eskiu.mypackage.Alarm"]

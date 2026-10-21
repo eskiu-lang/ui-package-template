@@ -1,0 +1,57 @@
+// <mypackage>: the battery's charge, for apps on eskiu-lang/ui. Replace it with what your
+// package does; it shows the three parts a package with native code has:
+//
+//   1. externs Eskiu calls, defined in native/ios, native/android and native/web;
+//   2. events the native side sends back on a channel ("mypackage"), read by use_native_event;
+//   3. a hook that runs the platform's service while a component that uses it is mounted
+//      (use_mount), sharing it among all of them.
+import <string>;
+import <ui>;
+
+// The battery: `level` in percent (-1 when the platform does not say, as on a simulator) and
+// whether it is charging.
+struct Battery { int level = -1; bool charging; }
+
+// The platform's side: start reporting the battery, and stop. Each report comes back on the
+// "mypackage" channel as "battery LEVEL CHARGING" (LEVEL -1 when unknown, CHARGING 0 or 1).
+extern void mypackage_start();
+extern void mypackage_stop();
+
+// The latest report, shared by every component that uses it, and how many are mounted.
+Battery mypackage_latest;
+int mypackage_users;
+
+// A message on the "mypackage" channel into mypackage_latest; false when it is not a report.
+bool mypackage_read(string payload) {
+    if (payload == null || strncmp(payload, "battery ", 8) != 0) { return false; }
+    String text;
+    defer String_free(&text);
+    String_from(&text, &payload[8]);
+    List<String> parts;
+    String_split(&text, ' ', &parts);
+    bool ok = parts.size == 2;
+    if (ok) {
+        mypackage_latest = Battery{level: atoi(parts.data[0].data), charging: String_eq_cstr(&parts.data[1], "1") == 1};
+    }
+    for (i in 0..parts.size) { String_free(&parts.data[i]); }
+    parts.free();
+    return ok;
+}
+
+// The battery while the calling scope is mounted; the scope renders again with each report.
+// The first use starts the platform's reports and the last one to unmount stops them.
+Battery use_battery() {
+    *Signal<int> updates = use_signal<int>(0);
+    use_native_event("mypackage", void(string payload) {
+        if (mypackage_read(payload)) { updates.set(updates.value + 1); }
+    });
+    use_mount(void() {
+        mypackage_users++;
+        if (mypackage_users == 1) { mypackage_start(); }
+    }, void() {
+        mypackage_users--;
+        if (mypackage_users == 0) { mypackage_stop(); }
+    });
+    updates.get();
+    return mypackage_latest;
+}

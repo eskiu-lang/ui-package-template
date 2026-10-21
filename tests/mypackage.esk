@@ -1,0 +1,80 @@
+// <mypackage> with no device: the platform's side is two stand-ins that count their calls, and
+// the test sends the events a platform would. `eskiuc test` runs it; a failed check exits with 1.
+import <io>;
+import <string>;
+import <ui>;
+import <mypackage>;
+
+int starts;
+int stops;
+
+void mypackage_start() { starts++; }
+
+void mypackage_stop() { stops++; }
+
+String shown;
+
+void check(bool ok, string what) {
+    if (!ok) {
+        printf("FAIL %s (shown: %s)\n", what, shown.data == null ? "" : shown.data);
+        exit(1);
+    }
+}
+
+*Signal<int> mounted;
+
+void Level() {
+    Scope("Level", Key{}, void() {
+        Battery battery = use_battery();
+        String text;
+        defer String_free(&text);
+        if (battery.level < 0) { String_from(&text, "unknown"); }
+        else { String_format(&text, "%d%%%s", battery.level, battery.charging ? " charging" : ""); }
+        Text(text.data);
+    });
+}
+
+int main() {
+    Ui runtime;
+    ui_init(&runtime, void(*uint8 data, int len) {
+        List<Mutation> items;
+        ui_decode(data, len, &items);
+        for (i in 0..items.size) {
+            if (items.data[i].op == 3) { String_from(&shown, items.data[i].text); }
+        }
+        items.free();
+        ui_complete(ui.sequence);
+    });
+    mounted = signal_new<int>(2);
+    ui_mount(void() {
+        Column(Style{}, void() {
+            int count = mounted.get();
+            for (i in 0..count) { Row(Style{key: key(i)}, void() { Level(); }); }
+        });
+    });
+    ui_frame();
+    check(starts == 1, "two components start the reports once");
+    check(String_eq_cstr(&shown, "unknown") == 1, "unknown before the first report");
+
+    ui_event_native("mypackage", "battery 82 1");
+    ui_frame();
+    check(String_eq_cstr(&shown, "82% charging") == 1, "a report renders");
+    ui_event_native("mypackage", "battery 81 0");
+    ui_frame();
+    check(String_eq_cstr(&shown, "81%") == 1, "another one");
+    ui_event_native("mypackage", "something else");
+    ui_frame();
+    check(String_eq_cstr(&shown, "81%") == 1, "another message is ignored");
+
+    mounted.set(1);
+    ui_frame();
+    check(stops == 0, "the reports run while one component is mounted");
+    mounted.set(0);
+    ui_frame();
+    check(stops == 1, "the last one to unmount stops them");
+    ui_shutdown();
+    mounted.free();
+    String_free(&shown);
+    printf("PASS mypackage\n");
+    return 0;
+}
