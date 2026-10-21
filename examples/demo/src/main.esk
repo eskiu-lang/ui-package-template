@@ -5,9 +5,9 @@ import <ui/kit>;
 import <mypackage>;
 
 void Demo() {
-    Column(Style{grow: 1, padding: 24, gap: 16, justify: JustifyCenter, background: kit.page}, void() {
+    Column(Style{grow: 1, padding: 24, gap: 16, justify: JustifyCenter, background: kit.page}) {
         Battery battery = use_battery();
-        Card(void() {
+        Card() {
             TextWith(Style{font_size: 15, color: kit.muted}, "Battery");
             String text;
             defer String_free(&text);
@@ -16,13 +16,13 @@ void Demo() {
             TextWith(Style{font_size: 48, font_weight: 800, color: kit.ink}, text.data);
             if (battery.level >= 0) { ProgressBar(battery.level, 100); }
             TextWith(Style{font_size: 15, color: kit.muted}, battery.charging ? "Charging" : "On battery");
-        });
-    });
+        }
+    }
 }
 
 void ui_app_start(int which) {
     kit_follow_system();
-    ui_mount(void() { Demo(); });
+    ui_mount() { Demo(); }
 }
 
 void ui_app_stop() {}

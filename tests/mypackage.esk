@@ -24,14 +24,14 @@ void check(bool ok, string what) {
 *Signal<int> mounted;
 
 void Level() {
-    Scope("Level", Key{}, void() {
+    Scope("Level", Key{}) {
         Battery battery = use_battery();
         String text;
         defer String_free(&text);
         if (battery.level < 0) { String_from(&text, "unknown"); }
         else { String_format(&text, "%d%%%s", battery.level, battery.charging ? " charging" : ""); }
         Text(text.data);
-    });
+    }
 }
 
 int main() {
@@ -46,12 +46,12 @@ int main() {
         ui_complete(ui.sequence);
     });
     mounted = signal_new<int>(2);
-    ui_mount(void() {
-        Column(Style{}, void() {
+    ui_mount() {
+        Column(Style{}) {
             int count = mounted.get();
             for (i in 0..count) { Row(Style{key: key(i)}, void() { Level(); }); }
-        });
-    });
+        }
+    }
     ui_frame();
     check(starts == 1, "two components start the reports once");
     check(String_eq_cstr(&shown, "unknown") == 1, "unknown before the first report");
