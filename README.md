@@ -18,8 +18,12 @@ Objective-C, Java (or Kotlin, C) and JavaScript underneath, and a `ui.toml` with
 platforms need. The template's package works as it is: `use_battery()` reports the battery's
 charge on iOS, Android and the web. Replace it with yours.
 [location](https://github.com/eskiu-lang/ui-location),
-[notifications](https://github.com/eskiu-lang/ui-notifications) and
-[camera](https://github.com/eskiu-lang/ui-camera) are built the same way.
+[notifications](https://github.com/eskiu-lang/ui-notifications),
+[camera](https://github.com/eskiu-lang/ui-camera),
+[barcode](https://github.com/eskiu-lang/ui-barcode),
+[pedometer](https://github.com/eskiu-lang/ui-pedometer),
+[securestore](https://github.com/eskiu-lang/ui-securestore) and
+[svg](https://github.com/eskiu-lang/ui-svg) are built the same way.
 
 ## Start
 
